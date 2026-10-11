@@ -1,0 +1,40 @@
+{
+  "agent-redaction": ["@lapismd/agent-redaction"],
+  "ai-controller": ["@lapismd/ai-controller"],
+  "ai-host": ["@lapismd/ai-host"],
+  "design-core": ["@lapismd/design-core"],
+  "lapis-community": ["@lapismd/lapis-community"],
+  "lapis-notes": [
+    "@lapis-notes/api",
+    "@lapis-notes/file-explorer",
+    "@lapis-notes/language-service",
+    "@lapis-notes/ui",
+    "@lapis-notes/workspace"
+  ],
+  "lapis-plugins": [
+    "@lapis-notes/ai",
+    "@lapis-notes/bases",
+    "@lapis-notes/bookmarks",
+    "@lapis-notes/community",
+    "@lapis-notes/graph",
+    "@lapis-notes/history",
+    "@lapis-notes/markdown",
+    "@lapis-notes/markdown-lint",
+    "@lapis-notes/search",
+    "@lapis-notes/slides",
+    "@lapis-notes/source-editor",
+    "@lapis-notes/spellcheck",
+    "@lapis-notes/wordcount"
+  ],
+  "mira-mde": [
+    "@lapismd/mira",
+    "@lapismd/mira-editor",
+    "@lapismd/mira-plugin-ai",
+    "@lapismd/mira-plugin-mermaid",
+    "@lapismd/mira-react",
+    "@lapismd/mira-vanilla"
+  ],
+  "spec-validator": ["@lapismd/spec-validator"],
+  "storybook-addon-visual-delta": ["@lapismd/storybook-addon-visual-delta"],
+  "terminal-host": ["@lapismd/terminal-host"]
+}

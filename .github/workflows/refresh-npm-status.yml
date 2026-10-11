@@ -1,0 +1,75 @@
+name: Refresh npm status
+
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/refresh-npm-status.yml
+      - scripts/**
+      - profile/packages.json
+  pull_request:
+    paths:
+      - .github/workflows/refresh-npm-status.yml
+      - scripts/**
+      - profile/packages.json
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-status-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+      - run: node --test scripts/update-npm-status.test.mjs
+
+  refresh:
+    if: github.event_name != 'pull_request'
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+      - run: node scripts/update-npm-status.mjs
+      - name: Publish changed package status
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node --input-type=module <<'JS'
+          import { readFileSync } from "node:fs";
+          import { execFileSync } from "node:child_process";
+          const { GITHUB_REPOSITORY, GITHUB_SHA } = process.env;
+          const endpoint = `repos/${GITHUB_REPOSITORY}/contents/profile/README.md`;
+          const original = JSON.parse(execFileSync("gh", ["api", `${endpoint}?ref=${GITHUB_SHA}`], { encoding: "utf8" }));
+          const updated = readFileSync("profile/README.md");
+          if (!updated.equals(Buffer.from(original.content, "base64"))) {
+            execFileSync("gh", ["api", "--method", "PUT", endpoint, "--input", "-"], {
+              input: JSON.stringify({
+                message: "Refresh npm publication status and versions",
+                content: updated.toString("base64"),
+                sha: original.sha,
+                branch: "main",
+              }),
+              stdio: ["pipe", "ignore", "inherit"],
+            });
+            console.log("Published updated npm status.");
+          } else {
+            console.log("No npm status changes to publish.");
+          }
+          JS
