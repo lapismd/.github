@@ -21,9 +21,10 @@ registry's `latest` versions, and `node --test scripts/update-npm-status.test.mj
 to check the updater.
 
 [Refresh npm status](https://github.com/lapismd/.github/actions/workflows/refresh-npm-status.yml)
-runs hourly, on updater changes, and on manual dispatch. It updates the profile
-only when package status changes. Registry errors fail the refresh and preserve
-the previous profile; a registry 404 is the only response treated as unpublished.
+runs hourly, on updater changes, and on manual dispatch. It opens or updates one
+automation pull request when package status changes. Registry errors fail the
+refresh and preserve the previous profile; a registry 404 is the only response
+treated as unpublished.
 
 This repository contains organization profile documentation only. It does not
 configure CI, publishing, or policy for the other repositories.

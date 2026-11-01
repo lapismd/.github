@@ -10,11 +10,13 @@ on:
       - .github/workflows/refresh-npm-status.yml
       - scripts/**
       - profile/packages.json
+      - profile/README.md
   pull_request:
     paths:
       - .github/workflows/refresh-npm-status.yml
       - scripts/**
       - profile/packages.json
+      - profile/README.md
 
 permissions:
   contents: read
@@ -41,35 +43,44 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: "24"
       - run: node scripts/update-npm-status.mjs
-      - name: Publish changed package status
+      - name: Open or update the package status pull request
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          node --input-type=module <<'JS'
-          import { readFileSync } from "node:fs";
-          import { execFileSync } from "node:child_process";
-          const { GITHUB_REPOSITORY, GITHUB_SHA } = process.env;
-          const endpoint = `repos/${GITHUB_REPOSITORY}/contents/profile/README.md`;
-          const original = JSON.parse(execFileSync("gh", ["api", `${endpoint}?ref=${GITHUB_SHA}`], { encoding: "utf8" }));
-          const updated = readFileSync("profile/README.md");
-          if (!updated.equals(Buffer.from(original.content, "base64"))) {
-            execFileSync("gh", ["api", "--method", "PUT", endpoint, "--input", "-"], {
-              input: JSON.stringify({
-                message: "Refresh npm publication status and versions",
-                content: updated.toString("base64"),
-                sha: original.sha,
-                branch: "main",
-              }),
-              stdio: ["pipe", "ignore", "inherit"],
-            });
-            console.log("Published updated npm status.");
-          } else {
-            console.log("No npm status changes to publish.");
-          }
-          JS
+          set -euo pipefail
+          if git diff --quiet -- profile/README.md; then
+            echo "No npm status changes to publish."
+            exit 0
+          fi
+
+          branch="automation/npm-status-refresh"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add profile/README.md
+          git commit -m "Refresh npm publication status and versions"
+
+          if git fetch origin "refs/heads/$branch:refs/remotes/origin/$branch"; then
+            lease="$(git rev-parse "refs/remotes/origin/$branch")"
+            git push --force-with-lease="refs/heads/$branch:$lease" origin "HEAD:refs/heads/$branch"
+          else
+            git push origin "HEAD:refs/heads/$branch"
+          fi
+
+          pr_number="$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$branch" --base main --state open --json number --jq '.[0].number // empty')"
+          if [[ -n "$pr_number" ]]; then
+            echo "Updated npm status pull request #$pr_number."
+          else
+            gh pr create \
+              --repo "$GITHUB_REPOSITORY" \
+              --head "$branch" \
+              --base main \
+              --title "Refresh npm publication status and versions" \
+              --body "Automated refresh of the organization profile from the public npm registry."
+          fi
