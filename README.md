@@ -21,10 +21,18 @@ registry's `latest` versions, and `node --test scripts/update-npm-status.test.mj
 to check the updater.
 
 [Refresh npm status](https://github.com/lapismd/.github/actions/workflows/refresh-npm-status.yml)
-runs hourly, on updater changes, and on manual dispatch. It opens or updates one
-automation pull request when package status changes. Registry errors fail the
-refresh and preserve the previous profile; a registry 404 is the only response
-treated as unpublished.
+runs updater tests on changes and manual dispatch. The generator remains owned
+here; the old scheduled GITHUB_TOKEN writer is retired to avoid competing PR
+writers and workflow-approval waits.
+
+[The central profile pilot](https://github.com/lapismd/dependency-automation/actions/workflows/profile-refresh.yml)
+generates the candidate without App credentials, then validates and publishes
+only npm-status cells through a separate worker using the existing App. It keeps
+one rolling PR, stops for manual branch repairs, and preserves ordinary CI and
+merge policy. The pilot is manual-only until hosted acceptance is recorded in
+[the rollout tracker](https://github.com/lapismd/dependency-automation/blob/main/PLAN.md).
+No secret is copied to this repository. Registry errors preserve the previous
+profile; a registry 404 is the only response treated as unpublished.
 
 This repository contains organization profile documentation only. It does not
 configure CI, publishing, or policy for the other repositories.
