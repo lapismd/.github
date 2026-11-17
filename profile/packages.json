@@ -13,7 +13,6 @@
     "@lapis-notes/workspace"
   ],
   "lapis-plugins": [
-    "@lapis-notes/ai",
     "@lapis-notes/bases",
     "@lapis-notes/bookmarks",
     "@lapis-notes/canvas",

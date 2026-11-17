@@ -15,7 +15,8 @@ GitHub renders [profile/README.md](profile/README.md) on the public
 
 The npm column is generated from the public package names in
 [profile/packages.json](profile/packages.json). Include intended public packages
-even before their first release; keep private packages out of this list.
+even before their first release; keep private and retired packages out of this
+active list. Shared AI is retired; Desktop owns the current bundled/native AI.
 Run `node scripts/update-npm-status.mjs` to refresh publication status and the
 registry's `latest` versions, and `node --test scripts/update-npm-status.test.mjs`
 to check the updater.
